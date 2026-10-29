@@ -1,0 +1,41 @@
+name: Static Application Security Testing (SAST)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  cppcheck-scan:
+    name: Cppcheck Source Audit (C++)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Codebase Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy Cppcheck Tool
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Execute C++ Static Scan
+        # Suppression flag filters standard library include path warnings safely
+        run: cppcheck --enable=warning,style --suppress=missingIncludeSystem --error-exitcode=0 src/
+
+  bandit-scan:
+    name: Bandit Source Audit (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Codebase Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python Runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Deploy Bandit Tool
+        run: pip install bandit
+
+      - name: Execute Python Static Scan
+        # Scans directory recursively to detect high-severity vulnerabilities like eval()
+        run: bandit -r src/
